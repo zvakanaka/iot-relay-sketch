@@ -3,6 +3,17 @@
  *
  * Test with:
  *   curl -u <MQTT_USERNAME>:<MQTT_PASSWORD> -d ON mqtt://<MQTT_BROKER>/<MQTT_CLIENT>/directive/powerState
+ *
+ * Compile with (for mkr wifi 1010):
+ *   arduino-cli compile --fqbn arduino:samd:mkrwifi1010
+ *
+ * Upload with (for mkr wifi 1010):
+ *   arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:samd:mkrwifi1010
+ *  or for mac:
+ *   arduino-cli upload -p /dev/cu.usbmodem14101 --fqbn arduino:samd:mkrwifi1010
+ *
+ * See available boards with:
+ *   arduino-cli board list
  */
 #include <ArduinoMqttClient.h>
 #if defined(ARDUINO_SAMD_MKRWIFI1010) || defined(ARDUINO_SAMD_NANO_33_IOT) || defined(ARDUINO_AVR_UNO_WIFI_REV2)
@@ -22,7 +33,7 @@
 #include "secrets.h"
 
 #define FIRMWARE_VERSION "1.0.0"
-#define RELAY_PIN 22
+#define RELAY_PIN 0
 
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
@@ -177,12 +188,12 @@ void sendToBroker(char* topic, char* message) {
 
 void turnOff() {
   Serial.println("Turning off...\n");
-	digitalWrite(RELAY_PIN, HIGH);
+	digitalWrite(RELAY_PIN, LOW);
 	sendToBroker("report/powerState", "OFF");
 }
 
 void turnOn() {
 	Serial.println("Turning on...\n");
-	digitalWrite(RELAY_PIN, LOW);
+	digitalWrite(RELAY_PIN, HIGH);
 	sendToBroker("report/powerState", "ON");
 }
