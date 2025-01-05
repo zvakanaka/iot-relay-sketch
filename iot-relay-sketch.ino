@@ -10,7 +10,7 @@
  * Upload with (for mkr wifi 1010):
  *   arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:samd:mkrwifi1010
  *  or for mac:
- *   arduino-cli upload -p /dev/cu.usbmodem14101 --fqbn arduino:samd:mkrwifi1010
+ *   arduino-cli upload -p /dev/cu.usbmodemNNNN --fqbn arduino:samd:mkrwifi1010
  *
  * See available boards with:
  *   arduino-cli board list
@@ -45,7 +45,6 @@ int splitTopic(char* topic, char* tokens[], int tokensNumber);
 void callback(char* topic, byte* payload, unsigned int length);
 void sendToBroker(char* topic, char* message);
 
-void setPercentage(int value);
 void turnOff();
 void turnOn();
 
@@ -75,8 +74,6 @@ void callback(char* topic, byte* payload, unsigned int length) {  // a new messa
 	Serial.print("Message:");
 	Serial.println(message);
 
-	//------------------ACTIONS HERE---------------------------------
-
 	if (strcmp(tokens[1], "directive") == 0 && strcmp(tokens[2], "powerState") == 0) {
 		if (strcmp(message, "ON") == 0) {
 			turnOn();
@@ -84,9 +81,10 @@ void callback(char* topic, byte* payload, unsigned int length) {  // a new messa
 			turnOff();
 		}
 	} else if (strcmp(tokens[1], "directive") == 0 && strcmp(tokens[2], "powerOffWait") == 0) {
-		if (int(message) > 0 && int(message) < 1000 * 60 * 60 * 1.5) {
-      delay(int(message) * 1000);
-			turnOn();
+    const int powerOffWait = atoi(message);
+		if (powerOffWait > 0 && powerOffWait < 1000 * 60 * 60 * 1.5) {
+      delay(powerOffWait * 1000);
+			turnOff();
     }
 	}
 }
@@ -144,7 +142,7 @@ void startMqtt() {
 
 	char subscibeTopic[100];
 	sprintf(subscibeTopic, "%s/#", MQTT_CLIENT);
-	client.subscribe(subscibeTopic);  //Subscribes to all messages send to the device
+	client.subscribe(subscibeTopic);  // Subscribes to all messages send to the device
 
 	sendToBroker("report/online", "true");  // Reports that the device is online
 	delay(100);
@@ -187,13 +185,13 @@ void sendToBroker(char* topic, char* message) {
 }
 
 void turnOff() {
-  Serial.println("Turning off...\n");
+  Serial.println("Turning off...");
 	digitalWrite(RELAY_PIN, LOW);
 	sendToBroker("report/powerState", "OFF");
 }
 
 void turnOn() {
-	Serial.println("Turning on...\n");
+	Serial.println("Turning on...");
 	digitalWrite(RELAY_PIN, HIGH);
 	sendToBroker("report/powerState", "ON");
 }
